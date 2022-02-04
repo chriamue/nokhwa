@@ -582,12 +582,17 @@ fn webcam_pipeline(device: &str, camera_format: CameraFormat) -> String {
 
 #[cfg(target_os = "linux")]
 fn webcam_pipeline(device: &str, camera_format: CameraFormat) -> String {
+    let plugin = if cfg!(feature = "input-libcamera") {
+        "libcamerasrc"
+    } else {
+        "v4l2src"
+    };
     match camera_format.format() {
         FrameFormat::MJPEG => {
-            format!("v4l2src device=/dev/video{} ! image/jpeg, width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+            format!("{} device=/dev/video{} ! image/jpeg, width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", plugin, device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
         }
         FrameFormat::YUYV => {
-            format!("v4l2src device=/dev/video{} ! video/x-raw,format=YUY2,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
+            format!("{} device=/dev/video{} ! video/x-raw,format=YUY2,width={},height={},framerate={}/1 ! appsink name=appsink async=false sync=false", plugin, device, camera_format.width(), camera_format.height(), camera_format.frame_rate())
         }
     }
 }
